@@ -1,1 +1,21 @@
-// Intentionally empty. Initial analysis will generate this automatically.
+Sections:
+	.init       type:code
+	extab       type:rodata
+	extabindex  type:rodata
+	.text       type:code
+	.ctors      type:rodata
+	.dtors      type:rodata
+	.rodata     type:rodata
+	.data       type:data
+	.bss        type:bss
+	.sdata      type:data
+	.sbss       type:bss
+	.sdata2     type:rodata
+	.sbss2      type:bss
+
+Runtime.PPCEABI.H/__init_cpp_exceptions.cpp:
+	.text       start:0x803F1A08 end:0x803F1A78
+	.ctors      start:0x804064E0 end:0x804064E4 rename:.ctors$10
+	.dtors      start:0x804067E0 end:0x804067E4 rename:.dtors$10
+	.dtors      start:0x804067E4 end:0x804067E8 rename:.dtors$15
+	.sdata      start:0x8059FF48 end:0x8059FF50
