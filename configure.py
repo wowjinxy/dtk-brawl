@@ -125,9 +125,10 @@ if args.no_asm:
 
 # Tool versions
 config.binutils_tag = "2.42-1"
-config.compilers_tag = "20231018"
-config.dtk_tag = "v0.7.6"
-config.sjiswrap_tag = "v1.1.1"
+config.compilers_tag = "20240706"
+config.dtk_tag = "v1.3.0"
+config.objdiff_tag = "v2.4.0"
+config.sjiswrap_tag = "v1.2.0"
 config.wibo_tag = "0.6.11"
 
 # Project
@@ -165,10 +166,28 @@ cflags_base = [
     "-RTTI off",
     "-fp_contract on",
     "-str reuse",
-    "-multibyte",  # For Wii compilers, replace with `-enc SJIS`
+    "-enc SJIS",  # For Wii compilers, replace with `-enc SJIS`
     "-i include",
     f"-i build/{config.version}/include",
     f"-DVERSION={version_num}",
+]
+
+cflags_common = [
+    *cflags_base,
+    "-DMATCHING",
+    "-Iinclude/st_starfox",
+    "-Iinclude/lib/PowerPC_EABI_Support/Runtime/Inc",
+    "-Iinclude/lib/BrawlHeaders/Brawl/Include",
+    "-Iinclude/lib/BrawlHeaders/nw4r/include",
+    "-Iinclude/lib/BrawlHeaders/OpenRVL/include",
+    "-Iinclude/lib/BrawlHeaders/OpenRVL/include/MetroTRK",
+    "-Iinclude/lib/BrawlHeaders/OpenRVL/include/revolution",
+    "-Iinclude/lib/BrawlHeaders/OpenRVL/include/RVLFaceLib",
+    "-Iinclude/lib/BrawlHeaders/OpenRVL/include/stl",
+    "-Iinclude/lib/BrawlHeaders/utils/include",
+    "-RTTI on",
+    "-ipa file",
+    "-inline on,noauto"
 ]
 
 # Debug flags
@@ -189,35 +208,12 @@ cflags_runtime = [
 
 # REL flags
 cflags_rel = [
-    *cflags_base,
+    *cflags_common,
     "-sdata 0",
     "-sdata2 0",
 ]
 
-config.linker_version = "Wii/0x4201_127"
-
-
-# Helper function for Dolphin libraries
-def DolphinLib(lib_name: str, objects: List[Object]) -> Dict[str, Any]:
-    return {
-        "lib": lib_name,
-        "mw_version": "GC/1.2.5n",
-        "cflags": cflags_base,
-        "host": False,
-        "objects": objects,
-    }
-
-
-# Helper function for REL script objects
-def Rel(lib_name: str, objects: List[Object]) -> Dict[str, Any]:
-    return {
-        "lib": lib_name,
-        "mw_version": "GC/1.3.2",
-        "cflags": cflags_rel,
-        "host": True,
-        "objects": objects,
-    }
-
+config.linker_version = "GC/3.0a5.2"
 
 Matching = True
 NonMatching = False
@@ -233,6 +229,18 @@ config.libs = [
         "objects": [
             Object(NonMatching, "Runtime.PPCEABI.H/global_destructor_chain.c"),
             Object(NonMatching, "Runtime.PPCEABI.H/__init_cpp_exceptions.cpp"),
+        ],
+    },
+    {
+        "lib": "st_starfox",
+        "mw_version": config.linker_version,
+        "cflags": cflags_rel,
+        "host": False,
+        "objects": [
+            Object(Matching, "global_destructor_chain.c"),
+            Object(Matching, "mo_stage/st_starfox/st_starfox.cpp"),
+            Object(Matching, "mo_stage/mo_stage.cpp"),
+            Object(Matching, "texture_palette.cpp"),
         ],
     },
 ]

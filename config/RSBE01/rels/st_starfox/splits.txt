@@ -5,3 +5,22 @@ Sections:
 	.rodata     type:rodata align:8
 	.data       type:data align:32
 	.bss        type:bss align:8
+
+global_destructor_chain.c:
+	.text       start:0x00000000 end:0x00000070
+	.dtors      start:0x00000000 end:0x00000008
+	.bss        start:0x00000000 end:0x00000004
+
+mo_stage/st_starfox/st_starfox.cpp:
+	.text       start:0x00000070 end:0x00001B38
+	.ctors      start:0x00000000 end:0x00000004
+	.rodata     start:0x00000000 end:0x00000074
+	.data       start:0x00000000 end:0x000016A8
+	.bss        start:0x00000008 end:0x00000018
+
+mo_stage/mo_stage.cpp:
+	.text       start:0x00001B38 end:0x00001BD4
+	.data       start:0x000016A8 end:0x000016B5
+
+texture_palette.cpp:
+	.data       start:0x000016B8 end:0x00002F80

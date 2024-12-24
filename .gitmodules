@@ -1,0 +1,3 @@
+[submodule "include/lib/BrawlHeaders"]
+	path = include/lib/BrawlHeaders
+	url = https://github.com/Sammi-Husky/BrawlHeaders
