@@ -83,7 +83,7 @@ class ProjectConfig:
         self.version: Optional[str] = None  # Version name
         self.warn_missing_config: bool = False  # Warn on missing unit configuration
         self.warn_missing_source: bool = False  # Warn on missing source file
-        self.rel_strip_partial: bool = True  # Generate PLFs with -strip_partial
+        self.rel_strip_partial: bool = False  # Generate PLFs with -strip_partial
         self.rel_empty_file: Optional[
             str
         ] = None  # Object name for generating empty RELs
