@@ -207,6 +207,7 @@ cflags_runtime = [
 ]
 
 # REL flags
+config.rel_strip_partial = False
 cflags_rel = [
     *cflags_common,
     "-sdata 0",

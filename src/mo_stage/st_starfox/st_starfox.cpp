@@ -383,7 +383,7 @@ void stStarfox::updateSceneEffectCorneria(float deltaFrame) {
     }
     switch (m_corneria_phase) {
         case 1:
-            if (m_curr_scene.getTimeLeft() < 1900.0f) {
+            if (m_curr_scene.m_framesLeft < 1900.0f) {
                 m_windAreaData2nd->m_speed = 0.5f;
                 m_windAreaData2nd->m_vector = 90.0f;
                 m_windAreaData2nd->m_60 = 16.0f;
@@ -395,13 +395,13 @@ void stStarfox::updateSceneEffectCorneria(float deltaFrame) {
             }
             break;
         case 2:
-            if (m_curr_scene.getTimeLeft() < 1500.0f) {
+            if (m_curr_scene.m_framesLeft < 1500.0f) {
                 m_wind2ndTrigger->setAreaSleep(1);
                 m_corneria_phase++;
             }
             break;
         case 3:
-            if (m_curr_scene.getTimeLeft() < 370.0f) {
+            if (m_curr_scene.m_framesLeft < 370.0f) {
                 m_windAreaData2nd->m_speed = 0.6f;
                 m_windAreaData2nd->m_vector = 270.0f;
                 m_windAreaData2nd->m_60 = 24.0f;
@@ -413,7 +413,7 @@ void stStarfox::updateSceneEffectCorneria(float deltaFrame) {
             }
             break;
         case 4:
-            if (m_curr_scene.getTimeLeft() < 100.0f) {
+            if (m_curr_scene.m_framesLeft < 100.0f) {
                 m_wind2ndTrigger->setAreaSleep(1);
                 m_corneria_phase++;
             }

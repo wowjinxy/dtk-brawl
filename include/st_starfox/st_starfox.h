@@ -5,81 +5,15 @@
 #include <gf/gf_archive.h>
 #include <gm/gm_lib.h>
 #include <gr/gr_madein.h>
+#include <gr/gr_tengan_event.h>
 #include <mt/mt_vector.h>
 #include <snd/snd_id.h>
 #include <st/se_util.h>
 #include <st/stage.h>
+#include <st/st_class_info.h>
 #include <st/st_melee.h>
 
-// TODO: Move to BrawlHeaders
-struct stClassInfo {
-public:
-    stClassInfo();
-    virtual ~stClassInfo();
-    static stClassInfo* getClassInfo(int);
-    void setClassInfo(srStageKind p1, stClassInfo* p2);
-    STATIC_CHECK(sizeof(stClassInfo) == 0x4);
-};
-
-// TODO: Move to BrawlHeaders
-template <srStageKind I, class T>
-class stClassInfoImpl : public stClassInfo {
-public:
-    stClassInfoImpl() : stClassInfo() {
-        setClassInfo(I, this);
-    };
-
-    virtual ~stClassInfoImpl() {
-        setClassInfo(I, 0);
-    }
-
-    virtual T* create() {
-        return new (Heaps::StageInstance) T;
-    }
-
-    virtual void preload() { }
-};
-
-// TODO: Move to BrawlHeaders
-class grTenganEvent {
-    enum grTenganEventState {
-        NoEvent = 0,
-        Running = 1,
-        ReadyEnd = 2
-    };
-
-    float m_time_elapsed;       // +0x0
-    float m_min;                // +0x4
-    float m_max;                // +0x8
-    float m_time_left;          // +0xC
-    float unk10;
-    u8 unk14[0x90];
-    grTenganEventState m_state; // +0xA4
-    s32 m_phase;                // +0xA8
-public:
-    grTenganEvent();
-    ~grTenganEvent();
-    void update(float delta);
-    void set(float min, float max);
-    bool start();
-    void end();
-    bool isEvent() const;
-    bool isReadyEnd() const;
-    s32 getPhase() const;
-    void setPhase(s32 phase);
-    float getTimeLeft() { return m_time_left; }
-};
-
-// TODO: Move to BrawlHeaders
-class IfFoxSmashAppearTask : public IfSmashAppearTask {
-public:
-    virtual void processDefault();
-    virtual ~IfFoxSmashAppearTask();
-    virtual void start(s32 p1);
-    virtual void onClose();
-    virtual void onChangeFace();
-    static IfFoxSmashAppearTask* create(gfArchive *);
-};
+ST_CLASS_INFO
 
 class stStarfox : public stMelee {
     grTenganEvent m_scene_lifecycle;

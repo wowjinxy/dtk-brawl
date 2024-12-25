@@ -23,4 +23,4 @@ mo_stage/mo_stage.cpp:
 	.data       start:0x000016A8 end:0x000016B5
 
 texture_palette.cpp:
-	.data       start:0x000016B8 end:0x00002F80
+	.data       start:0x000016C0 end:0x00002F80
