@@ -858,5 +858,6 @@ lbl_16_data_36F4 = .data:0x000036F4; // type:object size:0x64
 lbl_16_data_3758 = .data:0x00003758; // type:object size:0x14
 lbl_16_data_376C = .data:0x0000376C; // type:object size:0xC
 lbl_16_data_3778 = .data:0x00003778; // type:object size:0x8
-lbl_16_data_3780 = .data:0x00003780; // type:object size:0x18E0
+lbl_16_data_3780 = .data:0x00003780; // type:object size:0xC scope:local align:4 data:string
+HomeBtnIcon = .data:0x000037A0; // type:object size:0x18C0 scope:global align:32
 lbl_16_bss_8 = .bss:0x00000008; // type:object size:0xA4 data:4byte

@@ -56,4 +56,5 @@ lbl_29_data_23C = .data:0x0000023C; // type:object size:0xC
 lbl_29_data_248 = .data:0x00000248; // type:object size:0x8
 lbl_29_data_250 = .data:0x00000250; // type:object size:0x8
 lbl_29_data_258 = .data:0x00000258; // type:object size:0x8
-lbl_29_data_260 = .data:0x00000260; // type:object size:0x18E0
+lbl_29_data_260 = .data:0x00000260; // type:object size:0x10 scope:local align:4 data:string
+HomeBtnIcon = .data:0x00000280; // type:object size:0x18C0 scope:global align:32

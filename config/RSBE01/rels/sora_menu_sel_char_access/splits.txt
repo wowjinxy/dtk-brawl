@@ -2,5 +2,8 @@ Sections:
 	.text       type:code align:4
 	.ctors      type:rodata align:4
 	.dtors      type:rodata align:4
-	.rodata     type:rodata align:32
+	.data       type:data align:32
 	.bss        type:bss align:8
+
+home_button_icon.cpp:
+	.data       start:0x00000060 end:0x00001920

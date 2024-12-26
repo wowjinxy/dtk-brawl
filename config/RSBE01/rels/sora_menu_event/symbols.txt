@@ -83,4 +83,5 @@ lbl_9_data_290 = .data:0x00000290; // type:object size:0x8 data:string
 lbl_9_data_298 = .data:0x00000298; // type:object size:0x8
 lbl_9_data_2A0 = .data:0x000002A0; // type:object size:0x8
 lbl_9_data_2A8 = .data:0x000002A8; // type:object size:0x8
-lbl_9_data_2B0 = .data:0x000002B0; // type:object size:0x18D0
+lbl_9_data_2B0 = .data:0x000002B0; // type:object size:0xC scope:local align:4 data:string
+HomeBtnIcon = .data:0x000002C0; // type:object size:0x18C0 scope:global align:32
