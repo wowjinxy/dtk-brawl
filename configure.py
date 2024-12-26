@@ -15,7 +15,6 @@
 import argparse
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
 
 from tools.project import (
     Object,
@@ -26,9 +25,15 @@ from tools.project import (
 )
 
 # Game versions
-DEFAULT_VERSION = 0
+DEFAULT_VERSION = 3  # RSBE01_02
 VERSIONS = [
-    "RSBE01",  # 0
+    "RSBJ01_00",  # Japan Rev 0 (January 31, 2008)
+    "RSBJ01_01",  # Japan Rev 1 (?)
+    "RSBE01_01",  # USA Rev 1 (March 9, 2008)
+    "RSBE01_02",  # USA Rev 2 (?)
+    "RSBP01_00",  # PAL Rev 0 (June 27, 2008)
+    "RSBP01_01",  # PAL Rev 1 (?)
+    "RSBK01_00",  # Korea Rev 0 (April 29, 2010)
 ]
 
 parser = argparse.ArgumentParser()
@@ -40,6 +45,7 @@ parser.add_argument(
     nargs="?",
 )
 parser.add_argument(
+    "-v",
     "--version",
     choices=VERSIONS,
     type=str.upper,
@@ -71,11 +77,6 @@ parser.add_argument(
     help="generate map file(s)",
 )
 parser.add_argument(
-    "--no-asm",
-    action="store_true",
-    help="don't incorporate .s files from asm directory",
-)
-parser.add_argument(
     "--debug",
     action="store_true",
     help="build with debug info (non-matching)",
@@ -94,6 +95,12 @@ parser.add_argument(
     help="path to decomp-toolkit binary or source (optional)",
 )
 parser.add_argument(
+    "--objdiff",
+    metavar="BINARY | DIR",
+    type=Path,
+    help="path to objdiff-cli binary or source (optional)",
+)
+parser.add_argument(
     "--sjiswrap",
     metavar="EXE",
     type=Path,
@@ -104,30 +111,45 @@ parser.add_argument(
     action="store_true",
     help="print verbose output",
 )
+parser.add_argument(
+    "--non-matching",
+    dest="non_matching",
+    action="store_true",
+    help="builds equivalent (but non-matching) or modded objects",
+)
+parser.add_argument(
+    "--no-progress",
+    dest="progress",
+    action="store_false",
+    help="disable progress calculation",
+)
 args = parser.parse_args()
 
 config = ProjectConfig()
-config.version = args.version
+config.version = str(args.version)
 version_num = VERSIONS.index(config.version)
 
 # Apply arguments
 config.build_dir = args.build_dir
 config.dtk_path = args.dtk
+config.objdiff_path = args.objdiff
 config.binutils_path = args.binutils
 config.compilers_path = args.compilers
-config.debug = args.debug
 config.generate_map = args.map
+config.non_matching = args.non_matching
 config.sjiswrap_path = args.sjiswrap
+config.progress = args.progress
 if not is_windows():
     config.wrapper = args.wrapper
-if args.no_asm:
+# Don't build asm unless we're --non-matching
+if not config.non_matching:
     config.asm_dir = None
 
 # Tool versions
 config.binutils_tag = "2.42-1"
 config.compilers_tag = "20240706"
 config.dtk_tag = "v1.3.0"
-config.objdiff_tag = "v2.4.0"
+config.objdiff_tag = "v2.5.0"
 config.sjiswrap_tag = "v1.2.0"
 config.wibo_tag = "0.6.11"
 
@@ -139,13 +161,25 @@ config.asflags = [
     "--strip-local-absolute",
     "-I include",
     f"-I build/{config.version}/include",
-    f"--defsym version={version_num}",
+    f"--defsym BUILD_VERSION={version_num}",
+    f"--defsym VERSION_{config.version}",
 ]
 config.ldflags = [
     "-fp hardware",
     "-nodefaults",
-    # "-listclosure", # Uncomment for Wii linkers
 ]
+if args.debug:
+    config.ldflags.append("-g")  # Or -gdwarf-2 for Wii linkers
+if args.map:
+    config.ldflags.append("-mapunused")
+    # config.ldflags.append("-listclosure") # For Wii linkers
+
+# Use for any additional files that should cause a re-configure when modified
+config.reconfig_deps = []
+
+# Optional numeric ID for decomp.me preset
+# Can be overridden in libraries or objects
+config.scratch_preset_id = None
 
 # Base flags, common to most GC/Wii games.
 # Generally leave untouched, with overrides added below.
@@ -166,10 +200,11 @@ cflags_base = [
     "-RTTI off",
     "-fp_contract on",
     "-str reuse",
-    "-enc SJIS",  # For Wii compilers, replace with `-enc SJIS`
+    "-enc SJIS",
     "-i include",
     f"-i build/{config.version}/include",
-    f"-DVERSION={version_num}",
+    f"-DBUILD_VERSION={version_num}",
+    f"-DVERSION_{config.version}",
 ]
 
 cflags_common = [
@@ -187,11 +222,12 @@ cflags_common = [
     "-Iinclude/lib/BrawlHeaders/utils/include",
     "-RTTI on",
     "-ipa file",
-    "-inline on,noauto"
+    "-inline on,noauto",
 ]
 
 # Debug flags
-if config.debug:
+if args.debug:
+    # Or -sym dwarf-2 for Wii compilers
     cflags_base.extend(["-sym on", "-DDEBUG=1"])
 else:
     cflags_base.append("-DNDEBUG=1")
@@ -216,8 +252,17 @@ cflags_rel = [
 
 config.linker_version = "GC/3.0a5.2"
 
-Matching = True
-NonMatching = False
+Matching = True  # Object matches and should be linked
+NonMatching = False  # Object does not match and should not be linked
+Equivalent = (
+    config.non_matching
+)  # Object should be linked when configured with --non-matching
+
+
+# Object is only matching for specific versions
+def MatchingFor(*versions):
+    return config.version in versions
+
 
 config.warn_missing_config = True
 config.warn_missing_source = False
@@ -232,1103 +277,869 @@ config.libs = [
             Object(NonMatching, "Runtime.PPCEABI.H/__init_cpp_exceptions.cpp"),
         ],
     },
+    # Common REL units
     {
-        "lib": "ft_captain",
+        "lib": "REL",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
         "objects": [
             Object(Matching, "home_button_icon.cpp"),
         ],
+    },
+    {
+        "lib": "ft_captain",
+        "mw_version": config.linker_version,
+        "cflags": cflags_rel,
+        "host": False,
+        "objects": [],
     },
     {
         "lib": "ft_dedede",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_diddy",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_donkey",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_falco",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_fox",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_gamewatch",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_ganon",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_iceclimber",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_ike",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_kirby",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_koopa",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_link",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_lucario",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_lucas",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_luigi",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_mario",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_marth",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_metaknight",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_ness",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_peach",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_pikachu",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_pikmin",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_pit",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_poke",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_purin",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_robot",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_samus",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_snake",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_sonic",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_toonlink",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_wario",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_wolf",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_yoshi",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_zako",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "ft_zelda",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_adv_menu_difficulty",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_adv_menu_ending",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_adv_menu_game_over",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_adv_menu_name",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_adv_menu_result",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_adv_menu_save_load",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_adv_menu_save_point",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_adv_menu_seal",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_adv_menu_sel_char",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_adv_menu_sel_map",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_adv_menu_telop",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_adv_menu_visual",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_adv_stage",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_enemy",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_melee",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_menu_boot",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_menu_challenger",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_menu_collect_viewer",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_menu_edit",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_menu_event",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_menu_fig_get_demo",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_menu_friend_list",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_menu_game_over",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_menu_intro",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_menu_main",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_menu_name",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_menu_qm",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_menu_replay",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_menu_rule",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_menu_sel_char",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_menu_sel_char_access",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_menu_sel_stage",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_menu_simple_ending",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_menu_snap_shot",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_menu_time_result",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_menu_title",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_menu_title_sunset",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_menu_tour",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_menu_watch",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_minigame",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "sora_scene",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_battle",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_battles",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_config",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_crayon",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_croll",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_dolpic",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_donkey",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_dxbigblue",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_dxcorneria",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_dxgarden",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_dxgreens",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_dxonett",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_dxpstadium",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_dxrcruise",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_dxshrine",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_dxyorster",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_dxzebes",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_earth",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_emblem",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_famicom",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_final",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_fzero",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_greenhill",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_gw",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_halberd",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_heal",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_homerun",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_ice",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_jungle",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_kart",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_madein",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_mansion",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_mariopast",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_metalgear",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_newpork",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_norfair",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_oldin",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_orpheon",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_otrain",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_palutena",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_pictchat",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_pirates",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_plankton",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_stadium",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_stageedit",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_starfox",
@@ -1339,7 +1150,6 @@ config.libs = [
             Object(Matching, "global_destructor_chain.c"),
             Object(Matching, "mo_stage/st_starfox/st_starfox.cpp"),
             Object(Matching, "mo_stage/mo_stage.cpp"),
-            Object(Matching, "home_button_icon.cpp"),
         ],
     },
     {
@@ -1347,36 +1157,37 @@ config.libs = [
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_tengan",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
     {
         "lib": "st_village",
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [
-            Object(Matching, "home_button_icon.cpp"),
-        ],
+        "objects": [],
     },
 ]
+
+# Optional extra categories for progress tracking
+# Adjust as desired for your project
+config.progress_categories = [
+    # ProgressCategory("game", "Game Code"),
+    # ProgressCategory("sdk", "SDK Code"),
+]
+config.progress_each_module = args.verbose
 
 if args.mode == "configure":
     # Write build.ninja and objdiff.json
     generate_build(config)
 elif args.mode == "progress":
     # Print progress and write progress.json
-    config.progress_each_module = args.verbose
     calculate_progress(config)
 else:
     sys.exit("Unknown mode: " + args.mode)
