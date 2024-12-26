@@ -38,4 +38,5 @@ lbl_32_data_168 = .data:0x00000168; // type:object size:0x10
 lbl_32_data_178 = .data:0x00000178; // type:object size:0x8
 lbl_32_data_180 = .data:0x00000180; // type:object size:0x8
 lbl_32_data_188 = .data:0x00000188; // type:object size:0x8
-lbl_32_data_190 = .data:0x00000190; // type:object size:0x18D0
+lbl_32_data_190 = .data:0x00000190; // type:object size:0x10 scope:local align:4 data:string
+HomeBtnIcon = .data:0x000001A0; // type:object size:0x18C0 scope:global align:32

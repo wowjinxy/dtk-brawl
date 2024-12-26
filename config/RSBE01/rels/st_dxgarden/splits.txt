@@ -5,3 +5,6 @@ Sections:
 	.rodata     type:rodata align:8
 	.data       type:data align:8
 	.bss        type:bss align:8
+
+home_button_icon.cpp:
+	.data       start:0x000020C0 end:0x00003980
