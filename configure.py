@@ -243,7 +243,7 @@ cflags_runtime = [
 ]
 
 # REL flags
-config.rel_strip_partial = False
+config.rel_strip_partial = True
 cflags_rel = [
     *cflags_common,
     "-sdata 0",
@@ -642,7 +642,9 @@ config.libs = [
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [],
+        "objects": [
+            Object(Matching, "mo_melee/mo_melee.cpp")
+        ],
     },
     {
         "lib": "sora_menu_boot",
