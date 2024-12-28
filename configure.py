@@ -290,6 +290,7 @@ config.libs = [
             Object(Matching, "mo_fighter/mo_fighter.cpp"),
             Object(Matching, "mo_menu/mo_menu.cpp"),
             Object(Matching, "mo_stage/mo_stage.cpp"),
+            Object(Matching, "global_destructor_chain.c"),
             Object(Matching, "home_button_icon.cpp"),
         ],
     },
@@ -1161,7 +1162,6 @@ config.libs = [
         "cflags": cflags_rel,
         "host": False,
         "objects": [
-            Object(Matching, "global_destructor_chain.c"),
             Object(Matching, "mo_stage/st_starfox/st_starfox.cpp"),
         ],
     },

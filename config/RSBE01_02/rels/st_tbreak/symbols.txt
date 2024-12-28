@@ -70,6 +70,7 @@ _unresolved = .text:0x00001E10; // type:function size:0xC scope:global
 _ctors = .ctors:0x00000000; // type:label scope:global data:4byte
 _dtors = .dtors:0x00000000; // type:label scope:global data:4byte
 __destroy_global_chain_reference = .dtors:0x00000000; // type:object size:0x4 scope:global
+__destroy_global_chain_reference = .dtors:0x00000004; // type:object size:0x4 scope:global
 lbl_89_rodata_0 = .rodata:0x00000000; // type:object size:0x64 data:float
 lbl_89_rodata_64 = .rodata:0x00000064; // type:object size:0x28 data:float
 lbl_89_rodata_8C = .rodata:0x0000008C; // type:object size:0x14 data:float

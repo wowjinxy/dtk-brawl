@@ -318,6 +318,7 @@ _unresolved = .text:0x0000B738; // type:function size:0xC scope:global
 _ctors = .ctors:0x00000000; // type:label scope:global data:4byte
 _dtors = .dtors:0x00000000; // type:label scope:global data:4byte
 __destroy_global_chain_reference = .dtors:0x00000000; // type:object size:0x4 scope:global
+__destroy_global_chain_reference = .dtors:0x00000004; // type:object size:0x4 scope:global
 lbl_50_rodata_0 = .rodata:0x00000000; // type:object size:0xC data:float
 lbl_50_rodata_C = .rodata:0x0000000C; // type:object size:0x44 data:float
 lbl_50_rodata_50 = .rodata:0x00000050; // type:object size:0x8 data:double
