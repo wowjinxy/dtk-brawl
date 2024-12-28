@@ -6,5 +6,9 @@ Sections:
 	.data       type:data align:32
 	.bss        type:bss align:8
 
+mo_adv_menu/mo_adv_menu.cpp:
+	.text       start:0x000034C8 end:0x00003564
+	.data       start:0x000004D8 end:0x000004E8
+
 home_button_icon.cpp:
 	.data       start:0x00000500 end:0x00001DC0

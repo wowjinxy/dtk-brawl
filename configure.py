@@ -250,6 +250,8 @@ cflags_rel = [
     "-sdata2 0",
 ]
 
+cflags_sora_enemy = ["-O3,p" if flag == "-O4,p" else flag for flag in cflags_rel]
+
 config.linker_version = "GC/3.0a5.2"
 
 Matching = True  # Object matches and should be linked
@@ -284,6 +286,10 @@ config.libs = [
         "cflags": cflags_rel,
         "host": False,
         "objects": [
+            Object(Matching, "mo_adv_menu/mo_adv_menu.cpp"),
+            Object(Matching, "mo_fighter/mo_fighter.cpp"),
+            Object(Matching, "mo_menu/mo_menu.cpp"),
+            Object(Matching, "mo_stage/mo_stage.cpp"),
             Object(Matching, "home_button_icon.cpp"),
         ],
     },
@@ -628,14 +634,18 @@ config.libs = [
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [],
+        "objects": [
+            Object(Matching, "mo_adv_stage/mo_adv_stage.cpp"),
+        ],
     },
     {
         "lib": "sora_enemy",
         "mw_version": config.linker_version,
-        "cflags": cflags_rel,
+        "cflags": cflags_sora_enemy,
         "host": False,
-        "objects": [],
+        "objects": [
+            Object(Matching, "mo_enemy/mo_enemy.cpp"),
+        ],
     },
     {
         "lib": "sora_melee",
@@ -643,7 +653,7 @@ config.libs = [
         "cflags": cflags_rel,
         "host": False,
         "objects": [
-            Object(Matching, "mo_melee/mo_melee.cpp")
+            Object(Matching, "mo_melee/mo_melee.cpp"),
         ],
     },
     {
@@ -826,7 +836,9 @@ config.libs = [
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [],
+        "objects": [
+            Object(Matching, "mo_scene/mo_scene.cpp"),
+        ],
     },
     {
         "lib": "st_battle",
@@ -1151,7 +1163,6 @@ config.libs = [
         "objects": [
             Object(Matching, "global_destructor_chain.c"),
             Object(Matching, "mo_stage/st_starfox/st_starfox.cpp"),
-            Object(Matching, "mo_stage/mo_stage.cpp"),
         ],
     },
     {

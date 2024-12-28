@@ -19,7 +19,7 @@ void _prolog() {
 }
 
 void _epilog() {
-    // Run global destructors
+    // run the global destructors
     PFN_voidfunc* dtor;
     for (dtor = _dtors; *dtor; dtor++) {
         (*dtor)();
@@ -27,5 +27,5 @@ void _epilog() {
 }
 
 void _unresolved() {
-    moUnResolvedMessage("mo_stage.cpp");
+    moUnResolvedMessage("mo_adv_stage.cpp");
 }

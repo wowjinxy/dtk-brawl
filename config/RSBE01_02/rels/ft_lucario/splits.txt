@@ -6,5 +6,9 @@ Sections:
 	.data       type:data align:32
 	.bss        type:bss align:8
 
+mo_fighter/mo_fighter.cpp:
+	.text       start:0x000140AC end:0x00014148
+	.data       start:0x00007350 end:0x0000735F
+
 home_button_icon.cpp:
 	.data       start:0x00007360 end:0x00008C20
