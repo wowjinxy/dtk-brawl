@@ -1,3 +1,6 @@
+#include <gf/gf_application.h>
+#include <sc/sc_scene_init.h>
+#include <sq/sq_sequence_init.h>
 #include <st/module.h>
 
 extern "C" {
@@ -16,6 +19,17 @@ void _prolog() {
     for (ctor = _ctors; *ctor; ctor++) {
         (*ctor)();
     }
+    scSystemRegisterScene();
+    sqRegistSequence();
+    switch (g_gfGameApplication->m_e4 >> 24) {
+        case 0:
+        case 1:
+        case 2:
+            sqSystemSetStartSequence(true);
+            break;
+        default:
+            break;
+    }
 }
 
 void _epilog() {
@@ -27,5 +41,5 @@ void _epilog() {
 }
 
 void _unresolved() {
-    moUnResolvedMessage("mo_stage.cpp");
+    moUnResolvedMessage("mo_scene.cpp");
 }
