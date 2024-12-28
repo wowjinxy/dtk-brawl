@@ -6,6 +6,11 @@ Sections:
 	.data       type:data align:32
 	.bss        type:bss align:8
 
+global_destructor_chain.c:
+	.text       start:0x00000000 end:0x00000070
+	.dtors      start:0x00000000 end:0x00000008
+	.bss        start:0x00000000 end:0x00000004
+
 mo_stage/mo_stage.cpp:
 	.text       start:0x00010718 end:0x000107B4
 	.data       start:0x00003EA0 end:0x00003EAD
