@@ -441,7 +441,7 @@ modules:
   hash: 2f5b228dee95a6c79f2fc51d02233410cee2d0e2
   splits: config/RSBE01_02/rels/st_otrain/splits.txt
   symbols: config/RSBE01_02/rels/st_otrain/symbols.txt
-  force_active: [HomeBtnIcon]
+  force_active: [create__17stOnlineTrainningFv, HomeBtnIcon]
 - object: files/module/st_heal.rel
   hash: c5e0b6cf84f676e01b240c59d4b6f31e14cc16eb
   splits: config/RSBE01_02/rels/st_heal/splits.txt
