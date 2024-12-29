@@ -251,6 +251,7 @@ cflags_rel = [
 ]
 
 cflags_sora_enemy = ["-O3,p" if flag == "-O4,p" else flag for flag in cflags_rel]
+cflags_st_otrain = ["-inline auto" if flag == "-inline on,noauto" else flag for flag in cflags_rel]
 
 config.linker_version = "GC/3.0a5.2"
 
@@ -1110,9 +1111,11 @@ config.libs = [
     {
         "lib": "st_otrain",
         "mw_version": config.linker_version,
-        "cflags": cflags_rel,
+        "cflags": cflags_st_otrain,
         "host": False,
-        "objects": [],
+        "objects": [
+            Object(Matching, "mo_stage/st_otrain/st_onlinetrainning.cpp"),
+        ],
     },
     {
         "lib": "st_palutena",

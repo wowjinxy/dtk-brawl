@@ -11,6 +11,13 @@ global_destructor_chain.c:
 	.dtors      start:0x00000000 end:0x00000008
 	.bss        start:0x00000000 end:0x00000004
 
+mo_stage/st_otrain/st_onlinetrainning.cpp:
+	.text       start:0x00000070 end:0x000008C4
+	.ctors      start:0x00000000 end:0x00000004
+	.rodata     start:0x00000000 end:0x0000000C
+	.data       start:0x00000000 end:0x000003A0
+	.bss        start:0x00000008 end:0x00000028
+
 mo_stage/mo_stage.cpp:
 	.text       start:0x000008C4 end:0x00000960
 	.data       start:0x000003A0 end:0x000003AD
