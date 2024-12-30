@@ -250,7 +250,7 @@ cflags_rel = [
     "-sdata2 0",
 ]
 
-cflags_sora_enemy = ["-O3,p" if flag == "-O4,p" else flag for flag in cflags_rel]
+cflags_sora_enemy = ["-O2,s" if flag == "-O4,p" else flag for flag in cflags_rel]
 cflags_st_otrain = ["-inline auto" if flag == "-inline on,noauto" else flag for flag in cflags_rel]
 
 config.linker_version = "GC/3.0a5.2"
@@ -646,6 +646,7 @@ config.libs = [
         "cflags": cflags_sora_enemy,
         "host": False,
         "objects": [
+            Object(Matching, "mo_enemy/sora_enemy/em_info.cpp"),
             Object(Matching, "mo_enemy/mo_enemy.cpp"),
         ],
     },
