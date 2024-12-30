@@ -13,6 +13,13 @@ Sections:
 	.sdata2     type:rodata align:16
 	.sbss2      type:bss align:32
 
+sora/mt/mt_prng.cpp:
+	.text       start:0x8003FABC end:0x8003FD5C
+	.ctors      start:0x80406510 end:0x80406514
+	.data       start:0x8042AE50 end:0x8042AE6C
+	.sbss       start:0x805A00B8 end:0x805A00C0
+	.sdata2     start:0x805A1748 end:0x805A176C
+
 Runtime.PPCEABI.H/__init_cpp_exceptions.cpp:
 	.text       start:0x803F1A08 end:0x803F1A78
 	.ctors      start:0x804064E0 end:0x804064E4 rename:.ctors$10
