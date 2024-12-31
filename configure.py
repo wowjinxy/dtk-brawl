@@ -647,6 +647,7 @@ config.libs = [
         "host": False,
         "objects": [
             Object(Matching, "mo_enemy/sora_enemy/em_info.cpp"),
+            Object(Matching, "mo_enemy/sora_enemy/em_resource_module_impl.cpp"),
             Object(Matching, "mo_enemy/mo_enemy.cpp"),
         ],
     },
