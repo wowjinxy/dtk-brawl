@@ -1,8 +1,9 @@
-#include <em/em_info.h>
 #include <em/enemy.h>
+#include <em/em_create.h>
 #include <em/em_resource_module_impl.h>
 #include <types.h>
-#include <so/resource/so_resource_module_impl.h>
+
+#include <em/em_info.h>
 
 emInfo g_emInfo;
 
@@ -326,130 +327,130 @@ emInfo::emInfo() { }
 
 emInfo::~emInfo() { }
 
-u32 emInfo::isInvalidKind(s32 index) {
-    if (index <= -1 || index >= NumEnemies) {
+u32 emInfo::isInvalidKind(EnemyKind kind) {
+    if (kind <= Enemy_Invalid || kind >= NumEnemies) {
         return 1;
     }
     return 0;
 }
 
-u32 emInfo::isPrimKind(s32 index) {
-    if (isInvalidKind(index) == 1) {
+u32 emInfo::isPrimKind(EnemyKind kind) {
+    if (isInvalidKind(kind) == 1) {
         return 0;
     }
-    if (index == 23 || index == 28 || (index - 31) <= 4U) {
+    if (kind == Enemy_Primid || kind == Enemy_Primid_Metal || (kind - Enemy_Primid_Big) <= 4U) {
         return 1;
     }
     return 0;
 }
 
-s32 emInfo::getInvalidKind() {
-    return -1;
+EnemyKind emInfo::getInvalidKind() {
+    return Enemy_Invalid;
 }
 
-u32 emInfo::getNodeNum(u32 index) {
-    if (isInvalidKind(index) == 1) {
+u32 emInfo::getNodeNum(EnemyKind kind) {
+    if (isInvalidKind(kind) == 1) {
         return 0;
     }
-    return NodeNumTable[index];
+    return NodeNumTable[kind];
 }
 
-u32 emInfo::getMotionNum(u32 index) {
-    if (isInvalidKind(index) == 1) {
+u32 emInfo::getMotionNum(EnemyKind kind) {
+    if (isInvalidKind(kind) == 1) {
         return 0;
     }
-    return MotionNumTable[index];
+    return MotionNumTable[kind];
 }
 
-u32 emInfo::getStatusNum(u32 index) {
-    if (isInvalidKind(index) == 1) {
+u32 emInfo::getStatusNum(EnemyKind kind) {
+    if (isInvalidKind(kind) == 1) {
         return 0;
     }
-    return StatusNumTable[index];
+    return StatusNumTable[kind];
 }
 
-u32 emInfo::getKineticEnergyNum(u32 index) {
-    if (isInvalidKind(index) == 1) {
+u32 emInfo::getKineticEnergyNum(EnemyKind kind) {
+    if (isInvalidKind(kind) == 1) {
         return 0;
     }
-    return KineticEnergyNumTable[index];
+    return KineticEnergyNumTable[kind];
 }
 
-u32 emInfo::getKineticEnergyParamAryPtrGetId(u32 index) {
-    if (isInvalidKind(index) == 1) {
+u32 emInfo::getKineticEnergyParamAryPtrGetId(EnemyKind kind) {
+    if (isInvalidKind(kind) == 1) {
         return 0;
     }
-    return KineticEnergyParamAryPtrGetIdTable[index];
+    return KineticEnergyParamAryPtrGetIdTable[kind];
 }
 
-u32 emInfo::getAreaNum(u32 index) {
-    if (isInvalidKind(index) == 1) {
+u32 emInfo::getAreaNum(EnemyKind kind) {
+    if (isInvalidKind(kind) == 1) {
         return 0;
     }
-    return AreaNumTable[index];
+    return AreaNumTable[kind];
 }
 
-u32 emInfo::getAreaParamAryPtrGetId(u32 index) {
-    if (isInvalidKind(index) == 1) {
+u32 emInfo::getAreaParamAryPtrGetId(EnemyKind kind) {
+    if (isInvalidKind(kind) == 1) {
         return 0;
     }
-    return AreaParamAryPtrGetIdTable[index];
+    return AreaParamAryPtrGetIdTable[kind];
 }
 
-u32 emInfo::getTargetSearchNum(u32 index) {
-    if (isInvalidKind(index) == 1) {
+u32 emInfo::getTargetSearchNum(EnemyKind kind) {
+    if (isInvalidKind(kind) == 1) {
         return 0;
     }
-    return TargetSearchNumTable[index];
+    return TargetSearchNumTable[kind];
 }
 
-u32 emInfo::getTargetSearchParamAryPtrGetId(u32 index) {
-    if (isInvalidKind(index) == 1) {
+u32 emInfo::getTargetSearchParamAryPtrGetId(EnemyKind kind) {
+    if (isInvalidKind(kind) == 1) {
         return 0;
     }
-    return TargetSearchParamAryPtrGetIdTable[index];
+    return TargetSearchParamAryPtrGetIdTable[kind];
 }
 
-u32 emInfo::getAINum(u32 index) {
-    if (isInvalidKind(index) == 1) {
+u32 emInfo::getAINum(EnemyKind kind) {
+    if (isInvalidKind(kind) == 1) {
         return 0;
     }
-    return AINumTable[index];
+    return AINumTable[kind];
 }
 
-emInfo::CreateEnemyFunc_t emInfo::getCreateFuncPtr(s32 index) {
-    if (isInvalidKind(index) == 1) {
+emInfo::CreateEnemyFunc_t emInfo::getCreateFuncPtr(EnemyKind kind) {
+    if (isInvalidKind(kind) == 1) {
         return 0;
     }
-    return CreateFuncPtrTable[index];
+    return CreateFuncPtrTable[kind];
 }
 
-emInfo::ModifyExParamFunc_t emInfo::getExParamModifyFuncPtr(s32 index) {
-    if (isInvalidKind(index) == 1) {
+emInfo::ModifyExParamFunc_t emInfo::getExParamModifyFuncPtr(EnemyKind kind) {
+    if (isInvalidKind(kind) == 1) {
         return 0;
     }
-    return ModifyExParamFuncPtrTable[index];
+    return ModifyExParamFuncPtrTable[kind];
 }
 
-emInfo::DeleteExParamFunc_t emInfo::getExParamDeleteFuncPtr(s32 index) {
-    if (isInvalidKind(index) == 1) {
+emInfo::DeleteExParamFunc_t emInfo::getExParamDeleteFuncPtr(EnemyKind kind) {
+    if (isInvalidKind(kind) == 1) {
         return 0;
     }
-    return DeleteExParamFuncPtrTable[index];
+    return DeleteExParamFuncPtrTable[kind];
 }
 
-u32 emInfo::getSEId(u32 index) {
-    if (isInvalidKind(index) == 1) {
+u32 emInfo::getSEId(EnemyKind kind) {
+    if (isInvalidKind(kind) == 1) {
         return 0;
     }
-    return SEIdTable[index];
+    return SEIdTable[kind];
 }
 
-u32 emInfo::StandByStatusKind(u32 index) {
-    if (isInvalidKind(index) == 1) {
+u32 emInfo::StandByStatusKind(EnemyKind kind) {
+    if (isInvalidKind(kind) == 1) {
         return -1;
     }
-    return StandByStatusKindTable[index];
+    return StandByStatusKindTable[kind];
 }
 
 const char* emInfo::getNamePtr() {
