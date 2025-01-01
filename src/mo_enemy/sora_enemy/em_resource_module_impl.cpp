@@ -2,6 +2,8 @@
 #include <em/enemy.h>
 #include <em/em_resource_module_impl.h>
 #include <nw4r/g3d/g3d_resfile.h>
+#include <so/resource/so_resource_id_accesser.h>
+#include <so/resource/so_resource_module_impl.h>
 #include <types.h>
 #include <ut/ut_archive_manager.h>
 #include <so/so_archive_db.h>

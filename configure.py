@@ -657,6 +657,7 @@ config.libs = [
         "cflags": cflags_rel,
         "host": False,
         "objects": [
+            Object(Matching, "mo_melee/sora_melee/so/so_resource_module_impl.cpp"),
             Object(Matching, "mo_melee/mo_melee.cpp"),
         ],
     },
