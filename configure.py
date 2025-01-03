@@ -659,6 +659,7 @@ config.libs = [
         "objects": [
             Object(Matching, "mo_melee/sora_melee/so/so_resource_module_impl.cpp"),
             Object(Matching, "mo_melee/sora_melee/so/so_photo_call_back.cpp"),
+            Object(Matching, "mo_melee/sora_melee/so/so_common_data_accesser.cpp"),
             Object(Matching, "mo_melee/mo_melee.cpp"),
         ],
     },
