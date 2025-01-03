@@ -658,6 +658,7 @@ config.libs = [
         "host": False,
         "objects": [
             Object(Matching, "mo_melee/sora_melee/so/so_resource_module_impl.cpp"),
+            Object(Matching, "mo_melee/sora_melee/so/so_photo_call_back.cpp"),
             Object(Matching, "mo_melee/mo_melee.cpp"),
         ],
     },
