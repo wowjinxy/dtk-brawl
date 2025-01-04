@@ -15,6 +15,13 @@ mo_melee/sora_melee/so/so_resource_module_impl.cpp:
 	.text       start:0x0006F850 end:0x0006FCF4
 	.data       start:0x00008028 end:0x000080F8
 
+mo_melee/sora_melee/so/so_general_work.cpp:
+	.text       start:0x0008D8B4 end:0x0008E230
+	.ctors      start:0x00000028 end:0x0000002C
+	.rodata     start:0x00000C10 end:0x00000C14
+	.data       start:0x00013B08 end:0x00013BE0
+	.bss        start:0x00001B30 end:0x00001B58
+
 mo_melee/sora_melee/so/so_photo_call_back.cpp:
 	.text       start:0x000C7024 end:0x000C7124
 
