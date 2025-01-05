@@ -22,6 +22,20 @@ mo_melee/sora_melee/so/so_general_work.cpp:
 	.data       start:0x00013B08 end:0x00013BE0
 	.bss        start:0x00001B30 end:0x00001B58
 
+mo_melee/sora_melee/so/so_general_work_abstract.cpp:
+	.text       start:0x0008E230 end:0x0008E2E4
+	.ctors      start:0x0000002C end:0x00000030
+	.rodata     start:0x00000C18 end:0x00000C1C
+	.data       start:0x00013BE0 end:0x00013C50
+	.bss        start:0x00001B58 end:0x00001B70
+
+mo_melee/sora_melee/so/so_general_work_simple.cpp:
+	.text       start:0x0008E2E4 end:0x0008E8A4
+	.ctors      start:0x00000030 end:0x00000034
+	.rodata     start:0x00000C20 end:0x00000C24
+	.data       start:0x00013C50 end:0x00013CF0
+	.bss        start:0x00001B70 end:0x00001BA0
+
 mo_melee/sora_melee/so/so_photo_call_back.cpp:
 	.text       start:0x000C7024 end:0x000C7124
 

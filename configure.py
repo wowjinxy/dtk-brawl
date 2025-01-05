@@ -252,6 +252,7 @@ cflags_rel = [
 
 cflags_sora_enemy = ["-O2,s" if flag == "-O4,p" else flag for flag in cflags_rel]
 cflags_st_otrain = ["-inline auto" if flag == "-inline on,noauto" else flag for flag in cflags_rel]
+cflags_sora_melee = ["-inline auto" if flag == "-inline on,noauto" else flag for flag in cflags_rel]
 
 config.linker_version = "GC/3.0a5.2"
 
@@ -654,11 +655,13 @@ config.libs = [
     {
         "lib": "sora_melee",
         "mw_version": config.linker_version,
-        "cflags": cflags_rel,
+        "cflags": cflags_sora_melee,
         "host": False,
         "objects": [
             Object(Matching, "mo_melee/sora_melee/so/so_resource_module_impl.cpp"),
             Object(Matching, "mo_melee/sora_melee/so/so_general_work.cpp"),
+            Object(Matching, "mo_melee/sora_melee/so/so_general_work_abstract.cpp"),
+            Object(Matching, "mo_melee/sora_melee/so/so_general_work_simple.cpp"),
             Object(Matching, "mo_melee/sora_melee/so/so_photo_call_back.cpp"),
             Object(Matching, "mo_melee/sora_melee/so/so_common_data_accesser.cpp"),
             Object(Matching, "mo_melee/mo_melee.cpp"),
