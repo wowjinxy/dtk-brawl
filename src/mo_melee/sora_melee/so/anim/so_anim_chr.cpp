@@ -6,12 +6,12 @@
 soAnimChr::soAnimChr() {
     m_animFrame = 0.0f;
     m_anmChrRes = 0;
-    m_frame_ = 0.0f;
-    m_frameSpeedModifier = 0.0f;
+    m_startFrame = 0.0f;
+    m_saveFrame = 0.0f;
     m_rate = 1.0f;
-    m_frame = 0.0f;
+    m_frameAhead = 0.0f;
     m_loopFlag = 0;
-    m_unkFlag = 0;
+    m_reverseFlag = 0;
 }
 
 soAnimChr::~soAnimChr() {
@@ -24,10 +24,10 @@ soAnimChr::~soAnimChr() {
 inline void soAnimChr::reinit(bool destroy) {
     m_rate = 1.0f;
     m_loopFlag = 0;
-    m_unkFlag = 0;
-    m_frame = 0.0f;
-    m_frameSpeedModifier = 0.0f;
-    m_frame_ = 0.0f;
+    m_reverseFlag = 0;
+    m_frameAhead = 0.0f;
+    m_saveFrame = 0.0f;
+    m_startFrame = 0.0f;
     m_animFrame = 0.0f;
     if (m_anmChrRes) {
         if (destroy) {
@@ -37,6 +37,15 @@ inline void soAnimChr::reinit(bool destroy) {
     }
 }
 
+#define INTERNAL_SET_FRAME(frame, endFrame)                         \
+    do {                                                            \
+        if (m_reverseFlag == 0) {                                   \
+            m_anmChrRes->SetFrame(frame);                           \
+        } else {                                                    \
+            m_anmChrRes->SetFrame((endFrame) - (float)(frame));     \
+        }                                                           \
+    } while (false)
+
 void soAnimChr::reset() {
     reinit(true);
 }
@@ -45,10 +54,10 @@ void soAnimChr::relinquishAnimObj() {
     reinit(false);
 }
 
-void soAnimChr::updateFrame(float p1) {
-    const float scaled_p1 = (m_rate * p1);
-    m_animFrame += scaled_p1;
-    m_frame = m_animFrame + m_rate;
+void soAnimChr::updateFrame(float delta) {
+    const float increment = (m_rate * delta);
+    m_animFrame += increment;
+    m_frameAhead = m_animFrame + m_rate;
     if (m_anmChrRes) {
         const float endFrame = getEndFrame(m_anmChrRes);
         if (m_animFrame >= endFrame) {
@@ -58,31 +67,23 @@ void soAnimChr::updateFrame(float p1) {
                 m_animFrame = endFrame;
             }
         }
-        if (m_frame >= endFrame) {
+        if (m_frameAhead >= endFrame) {
             if (m_loopFlag == 1) {
-                m_frame -= endFrame;
+                m_frameAhead -= endFrame;
             } else {
-                m_frame = endFrame;
+                m_frameAhead = endFrame;
             }
         }
-        if (m_animFrame != m_frame_) {
-            if (m_unkFlag == 0) {
-                m_anmChrRes->SetFrame(m_animFrame);
-            } else {
-                m_anmChrRes->SetFrame(endFrame - m_animFrame);
-            }
+        if (m_animFrame != m_startFrame) {
+            INTERNAL_SET_FRAME(m_animFrame, endFrame);
         }
     }
 }
 
-void soAnimChr::setFrame(float p1) {
-    m_animFrame = m_frame = p1;
+void soAnimChr::setFrame(float frame) {
+    m_animFrame = m_frameAhead = frame;
     if (m_anmChrRes) {
-        if (m_unkFlag == 0) {
-            m_anmChrRes->SetFrame((double)p1);
-        } else {
-            m_anmChrRes->SetFrame(getEndFrame(m_anmChrRes) - (float)(double)p1);
-        }
+        INTERNAL_SET_FRAME((double)frame, getEndFrame(m_anmChrRes));
     }
 }
 
@@ -94,27 +95,23 @@ bool soAnimChr::isEnd() const {
 }
 
 bool soAnimChr::isLooped() const {
-    if (m_loopFlag == 1 && m_animFrame >= 0.0f && m_animFrame < m_rate && m_animFrame < m_frame_) {
+    if (m_loopFlag == 1 && m_animFrame >= 0.0f && m_animFrame < m_rate && m_animFrame < m_startFrame) {
         return true;
     }
     return false;
 }
 
-void soAnimChr::setAnimObj(float p1, float p2, nw4r::g3d::AnmObjChrRes *p3, u8 p4, u8 p5) {
-    m_anmChrRes = p3;
-    m_rate = p2;
-    m_unkFlag = p5;
-    m_loopFlag = p4;
-    m_frame = p1;
-    m_animFrame = p1;
-    if (p3) {
-        if (m_unkFlag == 0) {
-            p3->SetFrame((double)p1);
-        } else {
-            p3->SetFrame(getEndFrame(p3) - (float)(double)p1);
-        }
+void soAnimChr::setAnimObj(float startFrame, float rate, nw4r::g3d::AnmObjChrRes *anmChrRes, u8 loopFlg, u8 reverseFlg) {
+    m_anmChrRes = anmChrRes;
+    m_rate = rate;
+    m_reverseFlag = reverseFlg;
+    m_loopFlag = loopFlg;
+    m_frameAhead = startFrame;
+    m_animFrame = startFrame;
+    if (m_anmChrRes) {
+        INTERNAL_SET_FRAME((double)startFrame, getEndFrame(anmChrRes));
     }
-    m_frame_ = p1;
+    m_startFrame = startFrame;
 }
 
 void soAnimChr::destroyAnimObj() {
@@ -130,29 +127,21 @@ void soAnimChr::disableNode(u32 id) {
     }
 }
 
-float soAnimChr::getEndFrame(nw4r::g3d::AnmObjChrRes* p1) const {
-    return (s32)p1->m_anmChrFile->m_1C - 1.0f;
+float soAnimChr::getEndFrame(nw4r::g3d::AnmObjChrRes* anmChrRes) const {
+    return (s32)anmChrRes->m_anmChrFile->m_1C - 1.0f;
 }
 
 void soAnimChr::rewind() {
-    m_frameSpeedModifier = m_animFrame;
-    m_animFrame = m_frame = m_frame_;
+    m_saveFrame = m_animFrame;
+    m_animFrame = m_frameAhead = m_startFrame;
     if (m_anmChrRes) {
-        if (m_unkFlag == 0) {
-            m_anmChrRes->SetFrame(m_frame_);
-        } else {
-            m_anmChrRes->SetFrame(getEndFrame(m_anmChrRes) - m_frame_);
-        }
+        INTERNAL_SET_FRAME(m_startFrame, getEndFrame(m_anmChrRes));
     }
 }
 
 void soAnimChr::turnBack() {
-    m_animFrame = m_frame = m_frameSpeedModifier;
+    m_animFrame = m_frameAhead = m_saveFrame;
     if (m_anmChrRes) {
-        if (m_unkFlag == 0) {
-            m_anmChrRes->SetFrame(m_frameSpeedModifier);
-        } else {
-            m_anmChrRes->SetFrame(getEndFrame(m_anmChrRes) - m_frameSpeedModifier);
-        }
+        INTERNAL_SET_FRAME(m_saveFrame, getEndFrame(m_anmChrRes));
     }
 }
