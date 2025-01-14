@@ -12,7 +12,7 @@
 #include <st/stage.h>
 #include <st/st_melee.h>
 
-#include "st_starfox.h"
+#include <st_starfox/st_starfox.h>
 
 stClassInfoImpl<Stages::StarFox, stStarfox> stStarfox::bss_loc_14;
 

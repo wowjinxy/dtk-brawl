@@ -291,7 +291,7 @@ modules:
   hash: 7fd36b8eb8301bdc877ca981b4f4909c49d593d5
   splits: config/RSBE01_02/rels/st_crayon/splits.txt
   symbols: config/RSBE01_02/rels/st_crayon/symbols.txt
-  force_active: [HomeBtnIcon]
+  force_active: [create__8stCrayonFv, HomeBtnIcon]
 - object: files/module/st_halberd.rel
   hash: e7df6fbddda7e802034539f8020a1c295dd3ed6a
   splits: config/RSBE01_02/rels/st_halberd/splits.txt

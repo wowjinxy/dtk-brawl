@@ -210,7 +210,7 @@ cflags_base = [
 cflags_common = [
     *cflags_base,
     "-DMATCHING",
-    "-Iinclude/st_starfox",
+    "-Iinclude",
     "-Iinclude/lib/PowerPC_EABI_Support/Runtime/Inc",
     "-Iinclude/lib/BrawlHeaders/Brawl/Include",
     "-Iinclude/lib/BrawlHeaders/nw4r/include",
@@ -251,6 +251,7 @@ cflags_rel = [
 ]
 
 cflags_sora_enemy = ["-O2,s" if flag == "-O4,p" else flag for flag in cflags_rel]
+cflags_st_crayon = ["-inline auto" if flag == "-inline on,noauto" else flag for flag in cflags_rel]
 cflags_st_otrain = ["-inline auto" if flag == "-inline on,noauto" else flag for flag in cflags_rel]
 cflags_sora_melee = ["-inline auto" if flag == "-inline on,noauto" else flag for flag in cflags_rel]
 
@@ -876,9 +877,11 @@ config.libs = [
     {
         "lib": "st_crayon",
         "mw_version": config.linker_version,
-        "cflags": cflags_rel,
+        "cflags": cflags_st_crayon,
         "host": False,
-        "objects": [],
+        "objects": [
+            Object(Matching, "mo_stage/st_crayon/st_crayon.cpp"),
+        ],
     },
     {
         "lib": "st_croll",
