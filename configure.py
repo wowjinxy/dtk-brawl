@@ -881,6 +881,7 @@ config.libs = [
         "host": False,
         "objects": [
             Object(Matching, "mo_stage/st_crayon/st_crayon.cpp"),
+            Object(Matching, "mo_stage/st_crayon/gr_crayon_yakumono.cpp"),
         ],
     },
     {

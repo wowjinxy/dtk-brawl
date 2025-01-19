@@ -49,9 +49,13 @@ class grCrayonGimic : public grCrayon {
 
 
 class grCrayonYakumono : public grYakumono {
-    u8 unk150[0xC];
+    float unk150;
+    u8 unk154[0x4];
+    u32 unk158;
   public:
-
+    grCrayonYakumono(const char* taskName);
+    virtual ~grCrayonYakumono();
+    virtual void update(float deltaFrame);
 };
 static_assert(sizeof(grCrayonYakumono) == 0x15C, "Class is wrong size!");
 
