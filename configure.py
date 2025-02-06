@@ -148,7 +148,7 @@ if not config.non_matching:
 # Tool versions
 config.binutils_tag = "2.42-1"
 config.compilers_tag = "20240706"
-config.dtk_tag = "v1.3.0"
+config.dtk_tag = "v1.4.1"
 config.objdiff_tag = "v2.5.0"
 config.sjiswrap_tag = "v1.2.0"
 config.wibo_tag = "0.6.11"
@@ -222,7 +222,6 @@ cflags_common = [
     "-Iinclude/lib/BrawlHeaders/utils/include",
     "-RTTI on",
     "-ipa file",
-    "-inline on,noauto",
 ]
 
 # Debug flags
@@ -251,9 +250,7 @@ cflags_rel = [
 ]
 
 cflags_sora_enemy = ["-O2,s" if flag == "-O4,p" else flag for flag in cflags_rel]
-cflags_st_crayon = ["-inline auto" if flag == "-inline on,noauto" else flag for flag in cflags_rel]
-cflags_st_otrain = ["-inline auto" if flag == "-inline on,noauto" else flag for flag in cflags_rel]
-cflags_sora_melee = ["-inline auto" if flag == "-inline on,noauto" else flag for flag in cflags_rel]
+cflags_st_starfox = [*cflags_rel, "-inline on,noauto"]
 
 config.linker_version = "GC/3.0a5.2"
 
@@ -282,6 +279,16 @@ config.libs = [
             Object(NonMatching, "Runtime.PPCEABI.H/__init_cpp_exceptions.cpp"),
         ],
     },
+    # The DOL
+    {
+        "lib": "sora",
+        "mw_version": config.linker_version,
+        "cflags": cflags_common,
+        "host": False,
+        "objects": [
+            Object(Matching, "sora/mt/mt_prng.cpp", extra_cflags=["-RTTI off"]),
+        ],
+    },
     # Common REL units
     {
         "lib": "REL",
@@ -297,6 +304,7 @@ config.libs = [
             Object(Matching, "home_button_icon.cpp"),
         ],
     },
+    # The RELs
     {
         "lib": "ft_captain",
         "mw_version": config.linker_version,
@@ -656,7 +664,7 @@ config.libs = [
     {
         "lib": "sora_melee",
         "mw_version": config.linker_version,
-        "cflags": cflags_sora_melee,
+        "cflags": cflags_rel,
         "host": False,
         "objects": [
             Object(Matching, "mo_melee/sora_melee/so/anim/so_anim_chr.cpp"),
@@ -877,7 +885,7 @@ config.libs = [
     {
         "lib": "st_crayon",
         "mw_version": config.linker_version,
-        "cflags": cflags_st_crayon,
+        "cflags": cflags_rel,
         "host": False,
         "objects": [
             Object(Matching, "mo_stage/st_crayon/st_crayon.cpp"),
@@ -1125,7 +1133,7 @@ config.libs = [
     {
         "lib": "st_otrain",
         "mw_version": config.linker_version,
-        "cflags": cflags_st_otrain,
+        "cflags": cflags_rel,
         "host": False,
         "objects": [
             Object(Matching, "mo_stage/st_otrain/st_onlinetrainning.cpp"),
@@ -1176,7 +1184,7 @@ config.libs = [
     {
         "lib": "st_starfox",
         "mw_version": config.linker_version,
-        "cflags": cflags_rel,
+        "cflags": cflags_st_starfox,
         "host": False,
         "objects": [
             Object(Matching, "mo_stage/st_starfox/st_starfox.cpp"),
