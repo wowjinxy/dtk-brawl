@@ -20,6 +20,13 @@ sora/mt/mt_prng.cpp:
 	.sbss       start:0x805A00B8 end:0x805A00C0
 	.sdata2     start:0x805A1748 end:0x805A176C
 
+sora/ac/ac_cmd_interpreter.cpp:
+	.text       start:0x80139658 end:0x8013CA1C
+	.rodata     start:0x80409520 end:0x8040964C
+	.data       start:0x8045DD78 end:0x8045DDAC
+	.sdata      start:0x8059E6D0 end:0x8059E6D8
+	.sdata2     start:0x805A2AA8 end:0x805A2AC0
+
 Runtime.PPCEABI.H/__init_cpp_exceptions.cpp:
 	.text       start:0x803F1A08 end:0x803F1A78
 	.ctors      start:0x804064E0 end:0x804064E4 rename:.ctors$10
