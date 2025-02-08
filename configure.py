@@ -287,6 +287,7 @@ config.libs = [
         "host": False,
         "objects": [
             Object(Matching, "sora/mt/mt_prng.cpp", extra_cflags=["-RTTI off"]),
+            Object(NonMatching, "sora/ac/ac_cmd_interpreter.cpp"),
         ],
     },
     # Common REL units
