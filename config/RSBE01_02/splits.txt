@@ -23,9 +23,23 @@ sora/mt/mt_prng.cpp:
 sora/ac/ac_cmd_interpreter.cpp:
 	.text       start:0x80139658 end:0x8013CA1C
 	.rodata     start:0x80409520 end:0x8040964C
-	.data       start:0x8045DD78 end:0x8045DDAC
-	.sdata      start:0x8059E6D0 end:0x8059E6D8
+	.data       start:0x8045DD78 end:0x8045DDF0
+	.sdata      start:0x8059E6D0 end:0x8059E6F0
 	.sdata2     start:0x805A2AA8 end:0x805A2AC0
+
+sora/ac/ac_anim_cmd_impl.cpp:
+	.text       start:0x8013CA1C end:0x8013CF04
+	.data       start:0x8045DDF0 end:0x8045DF78
+	.sdata      start:0x8059E6F0 end:0x8059E718
+
+sora/ac/ac_null.cpp:
+	.text       start:0x8013CF04 end:0x8013D004
+	.ctors      start:0x80406554 end:0x80406558
+	.rodata     start:0x80409650 end:0x8040965C
+	.data       start:0x8045DF78 end:0x8045DFD0
+	.bss        start:0x8049EA10 end:0x8049EA20
+	.sdata      start:0x8059E718 end:0x8059E720
+	.sbss       start:0x805A0370 end:0x805A0380
 
 Runtime.PPCEABI.H/__init_cpp_exceptions.cpp:
 	.text       start:0x803F1A08 end:0x803F1A78
