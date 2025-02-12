@@ -11,6 +11,11 @@ global_destructor_chain.c:
 	.dtors      start:0x00000000 end:0x00000008
 	.bss        start:0x00000000 end:0x00000004
 
+mo_stage/st_dxbigblue/gr_dxbigblue.cpp:
+	.text       start:0x00004178 end:0x000042C8
+	.rodata     start:0x00000090 end:0x00000094
+	.data       start:0x000007A8 end:0x00000A20
+
 mo_stage/mo_stage.cpp:
 	.text       start:0x00008288 end:0x00008324
 	.data       start:0x00001F98 end:0x00001FA5

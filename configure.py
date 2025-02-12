@@ -921,7 +921,9 @@ config.libs = [
         "mw_version": config.linker_version,
         "cflags": cflags_rel,
         "host": False,
-        "objects": [],
+        "objects": [
+            Object(Matching, "mo_stage/st_dxbigblue/gr_dxbigblue.cpp"),
+        ],
     },
     {
         "lib": "st_dxcorneria",
