@@ -74,7 +74,7 @@ inline const acAnimCmd* acCmdInterpreter::updateCurrentCmd() {
 
 inline s32 acCmdInterpreter::getIdxOfStackData(const acCmdInterpreterStackData::Kind kind) const {
     for (s32 i = m_stack->size() - 1; i >= 0; i--) {
-        if (m_stack->at(static_cast<u32>(i))->kind == kind) {
+        if (m_stack->at(i).kind == kind) {
             return i;
         }
     }
@@ -183,7 +183,7 @@ void acCmdInterpreter::resetInterpreter(float frame, const acAnimCmdConv *initCm
             s32 size;
             // TODO: check for inlined function
             while (0 != (top = (size = m_stack->size(),
-                (size > 0) ? m_stack->at(static_cast<u32>(size - 1)) : 0))) {
+                (size > 0) ? &m_stack->at(size - 1) : 0))) {
                 if (!isSleepStackData(top->kind)) {
                     break;
                 }
@@ -194,7 +194,7 @@ void acCmdInterpreter::resetInterpreter(float frame, const acAnimCmdConv *initCm
             }
 
             for (s32 i = m_stack->size() - 1; i >= 0; i--) {
-                if (m_stack->at(static_cast<u32>(i))->kind == acCmdInterpreterStackData::knd7) {
+                if (m_stack->at(i).kind == acCmdInterpreterStackData::knd7) {
                     m_stack->erase(i);
                 }
             }
@@ -486,7 +486,7 @@ const acAnimCmd* acCmdInterpreter::getCurrentCmd() {
 
 acCmdInterpreterStackData* acCmdInterpreter::getLastSystemStackData() {
     s32 size = m_stack->size();
-    return (size <= 0) ? 0 : m_stack->at(static_cast<u32>(size - 1));
+    return (size <= 0) ? 0 : &m_stack->at(size - 1);
 }
 
 s32 acCmdInterpreter::dispatchCmdSwitch(const acAnimCmd* cmd) const {
@@ -517,7 +517,7 @@ void acCmdInterpreter::skipCmd() {
         acCmdInterpreterStackData* top;
         s32 size;
         while (0 != (top = (size = m_stack->size(),
-            (size > 0) ? m_stack->at(static_cast<u32>(size - 1)) : 0))) {
+            (size > 0) ? &m_stack->at(size - 1) : 0))) {
             if (!isSleepStackData(top->kind)) {
                 break;
             }
@@ -528,7 +528,7 @@ void acCmdInterpreter::skipCmd() {
         }
 
         for (s32 i = m_stack->size() - 1; i >= 0; i--) {
-            if (m_stack->at(static_cast<u32>(i))->kind == acCmdInterpreterStackData::knd7) {
+            if (m_stack->at(i).kind == acCmdInterpreterStackData::knd7) {
                 m_stack->erase(i);
             }
         }
@@ -561,7 +561,7 @@ void acCmdInterpreter::systemCmdFuncWaitSub(float waitTime) {
         s32 i = getIdxOfStackData(acCmdInterpreterStackData::knd7);
         float f2 = 0.0f;
         if (i >= 0) {
-            f2 = m_stack->at(static_cast<u32>(i))->floatData;
+            f2 = m_stack->at(i).floatData;
             float diff = (m_currentFrame - unk28);
             f2 -= diff;
             if (f2 < 0.0f) {
@@ -614,11 +614,11 @@ void acCmdInterpreter::systemCmdFuncFrame() {
                     // update the pre-existing stack element with
                     // the argument of the Frame command if it is greater than
                     // the frame already on the stack
-                    acCmdInterpreterStackData *stackPtr = m_stack->at(static_cast<u32>(i));
+                    acCmdInterpreterStackData& stackPtr = m_stack->at(i);
                     float f0 = arg.getFloatData();
-                    float f1 = stackPtr->floatData;
+                    float f1 = stackPtr.floatData;
                     if (f1 < f0) {
-                        stackPtr->floatData = arg.getFloatData();
+                        stackPtr.floatData = arg.getFloatData();
                     }
                 }
             } else {
@@ -683,7 +683,7 @@ void acCmdInterpreter::systemCmdFuncBreak() {
     s32 i = getIdxOfStackData(acCmdInterpreterStackData::Loop);
 
     if (i >= 0) {
-        m_stack->at(static_cast<u32>(i)); // no effect
+        m_stack->at(i); // no effect
         advanceCurrentCmd();
         skipNextLoopGroup();
         popStackToSize(i);
@@ -737,7 +737,7 @@ void acCmdInterpreter::systemCmdFuncReturn() {
         m_stack->clear();
         m_dontAdvance = false;
     } else {
-        const acAnimCmdConv* returnAddr = m_stack->at(static_cast<u32>(i))->addressData;
+        const acAnimCmdConv* returnAddr = m_stack->at(i).addressData;
         if (returnAddr) {
             m_currentCmd = returnAddr;
         }
@@ -960,7 +960,7 @@ void acCmdInterpreter::systemCmdFuncEnd() {
         m_stack->clear();
         m_dontAdvance = false;
     } else {
-        const acAnimCmdConv* returnAddr = m_stack->at(static_cast<u32>(i))->addressData;
+        const acAnimCmdConv* returnAddr = m_stack->at(i).addressData;
         if (returnAddr) {
             m_currentCmd = returnAddr;
         }
