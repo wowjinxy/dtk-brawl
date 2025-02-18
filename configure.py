@@ -675,6 +675,7 @@ config.libs = [
             Object(Matching, "mo_melee/sora_melee/so/so_general_work.cpp"),
             Object(Matching, "mo_melee/sora_melee/so/so_general_work_abstract.cpp"),
             Object(Matching, "mo_melee/sora_melee/so/so_general_work_simple.cpp"),
+            Object(Matching, "mo_melee/sora_melee/so/anim/so_anim_cmd_interpreter_effect.cpp"),
             Object(Matching, "mo_melee/sora_melee/so/so_photo_call_back.cpp"),
             Object(Matching, "mo_melee/sora_melee/so/so_common_data_accesser.cpp"),
             Object(Matching, "mo_melee/mo_melee.cpp"),

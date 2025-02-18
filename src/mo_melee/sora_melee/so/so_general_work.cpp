@@ -41,21 +41,21 @@ u32 soGeneralWork::turnOffFlag(u32 flag, u32 index) {
 }
 
 bool soGeneralWork::isFlag(u32 flag, u32 index) const {
-    soGeneralFlag<s32> *gflag = m_flags->at(index);
-    return gflag->flag & flag;
+    soGeneralFlag<s32>& gflag = m_flags->at(index);
+    return gflag.flag & flag;
 }
 
 void soGeneralWork::offFlag(u32 flag, u32 index) {
-    m_flags->at(index)->flag &= ~flag;
+    m_flags->at(index).flag &= ~flag;
 }
 
 void soGeneralWork::clearFlag(u32 index) {
-    soGeneralFlag<s32> *gflag = m_flags->at(index);
-    gflag->flag = 0;
+    soGeneralFlag<s32>& gflag = m_flags->at(index);
+    gflag.flag = 0;
 }
 
 void soGeneralWork::onFlag(u32 flag, u32 index) {
-    m_flags->at(index)->flag |= flag;
+    m_flags->at(index).flag |= flag;
 }
 
 u32 soGeneralWork::getFloatWorkSize() {
@@ -69,7 +69,7 @@ void soGeneralWork::divFloatWork(float value, u32 index) {
 }
 
 float soGeneralWork::getFloatWork(u32 index) const {
-    return *m_floats->at(index);
+    return m_floats->at(index);
 }
 
 void soGeneralWork::mulFloatWork(float value, u32 index) {
@@ -97,7 +97,7 @@ void soGeneralWork::decIntWork(u32 index) {
 }
 
 s32 soGeneralWork::getIntWork(u32 index) const {
-    return *m_ints->at(index);
+    return m_ints->at(index);
 }
 
 void soGeneralWork::incIntWork(u32 index) {

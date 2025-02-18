@@ -21,7 +21,7 @@ void _prolog() {
     }
     scSystemRegisterScene();
     sqRegistSequence();
-    switch (g_gfGameApplication->m_e4 >> 24) {
+    switch (g_gfApplication->m_e4 >> 24) {
         case 0:
         case 1:
         case 2:

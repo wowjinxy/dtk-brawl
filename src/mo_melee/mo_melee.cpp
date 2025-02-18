@@ -53,11 +53,11 @@ void _prolog() {
         (*ctor)();
     }
     soDisposeInstanceManager::create();
-    g_gfGameApplication->m_114.add(&bss_loc_8ce0);
+    g_gfApplication->m_114.add(&bss_loc_8ce0);
 }
 
 void _epilog() {
-    g_gfGameApplication->m_114.remove(&bss_loc_8ce0);
+    g_gfApplication->m_114.remove(&bss_loc_8ce0);
 
     // Run global destructors
     PFN_voidfunc* dtor;
