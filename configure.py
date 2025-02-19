@@ -287,6 +287,7 @@ config.libs = [
         "host": False,
         "objects": [
             Object(Matching, "sora/mt/mt_prng.cpp", extra_cflags=["-RTTI off"]),
+            Object(NonMatching, "sora/ty/ty_fig_listmng.cpp"),
             Object(NonMatching, "sora/ac/ac_cmd_interpreter.cpp"),
             Object(Matching, "sora/ac/ac_anim_cmd_impl.cpp"),
             Object(Matching, "sora/ac/ac_null.cpp"),
