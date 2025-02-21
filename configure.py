@@ -672,6 +672,7 @@ config.libs = [
         "host": False,
         "objects": [
             Object(Matching, "mo_melee/sora_melee/so/anim/so_anim_chr.cpp"),
+            Object(Matching, "mo_melee/sora_melee/so/so_controller_module_link_ref.cpp"),
             Object(Matching, "mo_melee/sora_melee/so/so_resource_module_impl.cpp"),
             Object(Matching, "mo_melee/sora_melee/so/so_general_work.cpp"),
             Object(Matching, "mo_melee/sora_melee/so/so_general_work_abstract.cpp"),
