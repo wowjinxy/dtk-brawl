@@ -13,7 +13,7 @@
   // "editor.tabSize": 2,
   "files.autoSave": "off",
   "files.insertFinalNewline": true,
-  "files.trimFinalNewlines": true,
+  "files.trimFinalNewlines": false,
   "files.associations": {
     "*.inc": "c",
     ".clangd": "yaml"
